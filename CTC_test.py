@@ -14,11 +14,11 @@ if __name__ == '__main__':
     # test = once_file(r'pic\0CR3_00638.jpg')
     # print(test)
     # 读取文件夹方式测试
-    test = path_file(r'pic')
-    print(test)
-    # 生成验证码方式测试
-    # test = create_once()
+    # test = path_file(r'pic')
     # print(test)
+    # 生成验证码方式测试
+    test = create_once()
+    print(test)
     # 测试准确率
     # accuracy = create_accuracy()
     # print(accuracy)
