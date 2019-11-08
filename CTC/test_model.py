@@ -85,7 +85,7 @@ def create_once(model_name=MODEL_NAME, characters=CHARACTERS):
     y_pred = model.predict(X_test)
     out = K.get_value(K.ctc_decode(y_pred, input_length=np.ones(y_pred.shape[0]) * y_pred.shape[1], )[0][0])[:, :4]
     out = ''.join([characters[x] for x in out[0]])
-    y_test = ''.join([characters[x] for x in y_test[0] if characters[x] != ' '] )
+    y_test = ''.join([characters[x] for x in y_test[0] if characters[x] != ' '])
 
     plt.title('生成的验证码为：%s\n识别出的验证码为：%s' % (y_test, out))
     plt.imshow(X_test[0], cmap='gray')
