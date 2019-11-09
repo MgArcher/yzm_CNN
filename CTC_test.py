@@ -17,8 +17,8 @@ if __name__ == '__main__':
     # test = path_file(r'pic')
     # print(test)
     # 生成验证码方式测试
-    test = create_once()
-    print(test)
+    # test = create_once()
+    # print(test)
     # 测试准确率
-    # accuracy = create_accuracy()
-    # print(accuracy)
+    accuracy = create_accuracy(model_name='ctc_best2.h5')
+    print(accuracy)

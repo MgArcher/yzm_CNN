@@ -18,10 +18,10 @@ WIDTH = 300
 # 图片高度
 HEIGHT = 80
 # 一张图片上最多的字符数
-N_LEN = 8
+N_LEN = 7
 # 字符种类数目
 N_CLASS =len(CHARACTERS)
-# 输入模型的序列长度（大于最多字符数就行）
+# 输入模型的序列长度（INPUT_LENGHT >= 2 * N_LEN + 1）
 INPUT_LENGHT = 16
 
 
@@ -30,7 +30,7 @@ INPUT_LENGHT = 16
 EPOCHS = 100
 
 # 模型保存名称
-MODEL_NAME = 'ctc_best.h5'
+MODEL_NAME = 'ctc_best2.h5'
 
 ############
 # 生成验证码的参数#

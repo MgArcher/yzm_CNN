@@ -105,7 +105,7 @@ def build_model(width=WIDTH, height=HEIGHT, n_len=N_LEN, n_class=N_CLASS):
     return model, base_model
 
 
-def train_model(train_data, valid_data, model=None, epochs=EPOCHS, model_name_=MODEL_NAME, MULTITHERADING=MULTITHERADING, workers=WORKERS):
+def train_model(train_data, valid_data, old_model=None, epochs=EPOCHS, model_name_=MODEL_NAME, MULTITHERADING=MULTITHERADING, workers=WORKERS):
     """
     :param train_data:训练集
     :param valid_data: 验证集
@@ -126,11 +126,15 @@ def train_model(train_data, valid_data, model=None, epochs=EPOCHS, model_name_=M
     model_name = os.path.join(baseDir, model_name_)
     cvs_name = model_name.replace('.h5', '.csv')
     loss_mode_name = os.path.join(baseDir, 'loss_' + model_name_)
+
+
     model, base_model = build_model()
+    if old_model:
+        model.load_weights(old_model)
 
-    callbacks = [EarlyStopping(patience=3), CSVLogger(cvs_name), ModelCheckpoint(loss_mode_name, save_best_only=True)]
+    callbacks = [EarlyStopping(patience=5), CSVLogger(cvs_name), ModelCheckpoint(loss_mode_name, save_best_only=True)]
 
-    model.compile(loss={'ctc': lambda y_true, y_pred: y_pred}, optimizer=Adam(1e-3, amsgrad=True))
+    model.compile(loss={'ctc': lambda y_true, y_pred: y_pred}, optimizer=Adam(1e-4, amsgrad=True))
     if MULTITHERADING:
         model.fit_generator(train_data, epochs=epochs, validation_data=valid_data, workers=workers,
                             use_multiprocessing=True, callbacks=callbacks)
