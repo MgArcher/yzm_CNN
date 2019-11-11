@@ -18,23 +18,22 @@ from CNN.CNN_data import CaptchaSequence
 from CNN.settings import *
 
 mpl.rcParams['font.sans-serif'] = ['SimHei']   # 雅黑字体
+# 加载模型
+baseDir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'model')
+model_path = os.path.join(baseDir, MODEL_NAME)
+model = load_model(model_path)
 
 
-def once_file(file_path, model_name=MODEL_NAME, width=WIDTH, height=HEIGHT, characters=CHARACTERS):
+def once_file(file_path):
     """识别一张图片"""
-    # 加载模型
-    baseDir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'model')
-    model_path = os.path.join(baseDir, model_name)
-    model = load_model(model_path)
-
     # 定义输入输出格式
-    decode_y = lambda y: ''.join([characters[x] for x in np.argmax(np.array(y), axis=2)[:, 0]])
-    X = np.zeros((1, height, width, 3), dtype=np.float32)
+    decode_y = lambda y: ''.join([CHARACTERS[x] for x in np.argmax(np.array(y), axis=2)[:, 0]])
+    X = np.zeros((1, HEIGHT, WIDTH, 3), dtype=np.float32)
 
     # 打开图片转换成输入
     out = Image.open(file_path)
     # 改变大小 并保证其不失真
-    out = out.resize((width, height), Image.ANTIALIAS)
+    out = out.resize((WIDTH, HEIGHT), Image.ANTIALIAS)
     out = out.convert('RGB')
     X[0] = np.array(out) / 255.0
     # 识别内容
@@ -49,43 +48,27 @@ def once_file(file_path, model_name=MODEL_NAME, width=WIDTH, height=HEIGHT, char
     return Y
 
 
-def path_file(file_path, model_name=MODEL_NAME, width=WIDTH, height=HEIGHT, characters=CHARACTERS):
+def path_file(file_path):
     """识别多张图片"""
-    # 加载模型
-    baseDir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'model')
-    model_path = os.path.join(baseDir, model_name)
-    model = load_model(model_path)
-
-    # 定义输入输出格式
-
-    # decode_y = lambda y: ''.join([characters[x] for x in np.argmax(np.array(y), axis=2)[:, 0]])
-    #     # X = np.zeros((1, height, width, 3), dtype=np.float32)
-
     files = os.listdir(file_path)
-    X = np.zeros((len(files), height, width, 3), dtype=np.float32)
+    X = np.zeros((len(files), HEIGHT, WIDTH, 3), dtype=np.float32)
     for i, file in enumerate(files):
         file_ = os.path.join(file_path, file)
         # 打开图片转换成输入
         out = Image.open(file_)
         # 改变大小 并保证其不失真
-        out = out.resize((width, height), Image.ANTIALIAS)
+        out = out.resize((WIDTH, HEIGHT), Image.ANTIALIAS)
         out = out.convert('RGB')
         X[i] = np.array(out) / 255.0
     # 识别内容
     y_pred = model.predict(X)
-    Y = [''.join([characters[x] for x in np.argmax(np.array(y_pred), axis=2)[:, i]]) for i in range(len(files))]
+    Y = [''.join([CHARACTERS[x] for x in np.argmax(np.array(y_pred), axis=2)[:, i]]) for i in range(len(files))]
     return [{files[i]:Y[i]} for i in range(len(files))]
 
 
-def create_once(model_name=MODEL_NAME, characters=CHARACTERS):
+def create_once():
     data = CaptchaSequence(batch_size=1, steps=1)
-    decode_y = lambda y: ''.join([characters[x] for x in np.argmax(np.array(y), axis=2)[:, 0]])
-
-    # 加载模型
-    baseDir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'model')
-    model_path = os.path.join(baseDir, model_name)
-    model = load_model(model_path)
-
+    decode_y = lambda y: ''.join([CHARACTERS[x] for x in np.argmax(np.array(y), axis=2)[:, 0]])
     X, y = data[0]
     y_pred = model.predict(X)
 
@@ -97,14 +80,9 @@ def create_once(model_name=MODEL_NAME, characters=CHARACTERS):
     return '生成的验证码为：%s,识别出的验证码为：%s' % (decode_y(y), decode_y(y_pred))
 
 
-def create_accuracy(model_name=MODEL_NAME, characters=CHARACTERS, batch_num=100):
-    # 加载模型
-    baseDir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'model')
-    model_path = os.path.join(baseDir, model_name)
-    model = load_model(model_path)
+def create_accuracy(batch_num=100):
     batch_acc = 0
-
-    with tqdm(CaptchaSequence(characters, batch_size=1, steps=batch_num)) as pbar:
+    with tqdm(CaptchaSequence(CHARACTERS, batch_size=1, steps=batch_num)) as pbar:
         for X, y in pbar:
             y_pred = model.predict(X)
             y_pred = np.argmax(y_pred, axis=-1).T

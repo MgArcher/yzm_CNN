@@ -62,7 +62,7 @@ def watch_model(model, model_name=MODEL_NAME):
     plot_model(model, to_file=model_name, show_shapes=True)
 
 
-def train_model(train_data, valid_data, model=None, epochs=EPOCHS, model_name=MODEL_NAME, MULTITHERADING=MULTITHERADING, workers=WORKERS):
+def train_model(train_data, valid_data, model=None, model_name=MODEL_NAME):
     """
     :param train_data:训练集
     :param valid_data: 验证集
@@ -98,8 +98,8 @@ def train_model(train_data, valid_data, model=None, epochs=EPOCHS, model_name=MO
 
     if MULTITHERADING:
         # 使用多进程训练
-        model.fit_generator(train_data, epochs=epochs, validation_data=valid_data, workers=workers,
+        model.fit_generator(train_data, epochs=EPOCHS, validation_data=valid_data, workers=WORKERS,
                             use_multiprocessing=True, callbacks=callbacks)
     else:
         # 训练模型
-        model.fit_generator(train_data, epochs=epochs, validation_data=valid_data, callbacks=callbacks)
+        model.fit_generator(train_data, epochs=EPOCHS, validation_data=valid_data, callbacks=callbacks)
