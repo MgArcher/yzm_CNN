@@ -7,7 +7,6 @@
 """
 import os
 import numpy as np
-from keras.utils import plot_model
 
 from keras.models import Input
 from keras.models import Model
@@ -32,30 +31,34 @@ from keras.callbacks import CSVLogger
 import keras.backend as K
 from keras.callbacks import Callback
 from keras.callbacks import ModelCheckpoint
+
 from CTC.settings import *
+from CTC.CTC_data import CaptchaSequence
 
 
 # 构造评估函数
-def evaluate(base_model, valid_data):
+def evaluate(base_model, batch_size=1, steps=100):
     batch_acc = 0
-    for [X_test, y_test, _, _], _ in valid_data:
+    valid_data = CaptchaSequence(batch_size, steps)
+    for i in range(len(valid_data)):
+        [X_test, y_test, _, _], _ = valid_data[i]
         y_pred = base_model.predict(X_test)
-        shape = y_pred.shape
-        out = K.get_value(K.ctc_decode(y_pred, input_length=np.ones(shape[0])*shape[1])[0][0])[:, :4]
-        if out.shape[1] == 4:
-            batch_acc += (y_test == out).all(axis=1).mean()
-    return batch_acc / STEPS
+        out = K.get_value(K.ctc_decode(y_pred, input_length=np.ones(y_pred.shape[0]) * y_pred.shape[1], )[0][0])[:, :4]
+        out = ''.join([CHARACTERS[x] for x in out[0]])
+        y_test = ''.join([CHARACTERS[x] for x in y_test[0] if CHARACTERS[x] != ' '])
+        if out == y_test:
+            batch_acc += 1
+    return batch_acc / steps
 
 
 class Evaluate(Callback):
-    def __init__(self, base_model, valid_data):
+    def __init__(self, base_model):
         self.accs = []
         self.base_model = base_model
-        self.valid_data = valid_data
 
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
-        acc = evaluate(self.base_model, self.valid_data)
+        acc = evaluate(self.base_model)
         logs['val_acc'] = acc
         self.accs.append(acc)
         print(f'\nacc: {acc * 100:.4f}')
@@ -105,7 +108,7 @@ def build_model(width=WIDTH, height=HEIGHT, n_len=N_LEN, n_class=N_CLASS):
     return model, base_model
 
 
-def train_model(train_data, valid_data, old_model=None, epochs=EPOCHS, model_name_=MODEL_NAME, MULTITHERADING=MULTITHERADING, workers=WORKERS):
+def train_model(train_data, valid_data, old_model=None,  model_name_=MODEL_NAME):
     """
     :param train_data:训练集
     :param valid_data: 验证集
@@ -127,18 +130,22 @@ def train_model(train_data, valid_data, old_model=None, epochs=EPOCHS, model_nam
     cvs_name = model_name.replace('.h5', '.csv')
     loss_mode_name = os.path.join(baseDir, 'loss_' + model_name_)
 
-
     model, base_model = build_model()
     if old_model:
         model.load_weights(old_model)
 
-    callbacks = [EarlyStopping(patience=5), CSVLogger(cvs_name), ModelCheckpoint(loss_mode_name, save_best_only=True)]
+    callbacks = [
+        EarlyStopping(patience=5),
+        CSVLogger(cvs_name),
+        ModelCheckpoint(loss_mode_name, save_best_only=True),
+        Evaluate(base_model)
+    ]
 
-    model.compile(loss={'ctc': lambda y_true, y_pred: y_pred}, optimizer=Adam(1e-4, amsgrad=True))
+    model.compile(loss={'ctc': lambda y_true, y_pred: y_pred}, optimizer=Adam(1e-3, amsgrad=True))
     if MULTITHERADING:
-        model.fit_generator(train_data, epochs=epochs, validation_data=valid_data, workers=workers,
+        model.fit_generator(train_data, epochs=EPOCHS, validation_data=valid_data, workers=WORKERS,
                             use_multiprocessing=True, callbacks=callbacks)
     else:
-        model.fit_generator(train_data, epochs=epochs, validation_data=valid_data, callbacks=callbacks)
+        model.fit_generator(train_data, epochs=EPOCHS, validation_data=valid_data, callbacks=callbacks)
     # 保存
     base_model.save(model_name, include_optimizer=False)

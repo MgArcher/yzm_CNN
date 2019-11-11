@@ -11,14 +11,14 @@ from CTC.test_model import *
 if __name__ == '__main__':
     # 测试模型
     # 读取文件方式测试
-    # test = once_file(r'pic\0CR3_00638.jpg')
-    # print(test)
+    test = once_file(r'pic\0CR3_00638.jpg')
+    print(test)
     # 读取文件夹方式测试
-    # test = path_file(r'pic')
-    # print(test)
+    test = path_file(r'pic')
+    print(test)
     # 生成验证码方式测试
-    # test = create_once()
-    # print(test)
+    test = create_once()
+    print(test)
     # 测试准确率
-    accuracy = create_accuracy(model_name='ctc_best2.h5')
+    accuracy = create_accuracy()
     print(accuracy)

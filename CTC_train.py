@@ -27,8 +27,9 @@ if __name__ == '__main__':
     # 测试集 取训练集中1/10作为测试集
     valid_data = CaptchaSequence(steps=int(STEPS / 10))
 
-    from keras.models import load_model
     # 训练模型
-    # model = load_model('model/loss_ctc_best.h5', custom_objectsloss={'ctc': lambda y_true, y_pred: y_pred})
-    train_model(train_data, valid_data, old_model='model/ctc_best.h5')
+    # 直接训练
+    train_model(train_data, valid_data)
+    # 加载旧模型的方式
+    # train_model(train_data, valid_data, old_model='model/loss_ctc_best2.h5')
 
